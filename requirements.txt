@@ -1,0 +1,4 @@
+selenium
+websockets
+fastapi
+uvicorn

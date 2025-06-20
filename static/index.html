@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إشارات التداول المباشرة</title>
+    <style>
+        body { background-color: #0b1e3f; color: white; font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        .container { max-width: 400px; margin: auto; }
+        .pair-selection { margin-bottom: 20px; }
+        button { background-color: #007bff; border: none; color: white; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 8px; }
+        button.active { background-color: #0dcaf0; }
+        .price-box { background-color: #112f5b; padding: 20px; border-radius: 12px; margin-top: 20px; }
+        .signal-box { background-color: #1c3d6b; padding: 20px; border-radius: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>اختيار الزوج</h2>
+        <div class="pair-selection">
+            <button id="USDJPY" class="active" onclick="selectPair('USDJPY')">USDJPY</button>
+            <button id="GBPUSD" onclick="selectPair('GBPUSD')">GBPUSD</button>
+            <button id="EURUSD" onclick="selectPair('EURUSD')">EURUSD</button>
+        </div>
+        <button onclick="fetchPrice()">🔄 تحديث فوري</button>
+
+        <div class="price-box" id="priceBox">
+            <h3 id="pairName">USDJPY</h3>
+            <h1 id="pairPrice">--</h1>
+            <p>السعر الحقيقي المباشر</p>
+        </div>
+
+        <div class="signal-box">
+            <h4>لا توجد إشارة مناسبة</h4>
+            <p>سيتم تحديث الإشارات تلقائياً</p>
+        </div>
+    </div>
+
+    <script>
+        let currentPair = 'USDJPY';
+        const priceBox = document.getElementById('pairPrice');
+        const pairName = document.getElementById('pairName');
+
+        const ws = new WebSocket(`wss://${window.location.host}/ws`);
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.asset === currentPair) {
+                priceBox.innerText = data.price;
+            }
+        };
+
+        function selectPair(pair) {
+            currentPair = pair;
+            pairName.innerText = pair;
+
+            document.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(pair).classList.add('active');
+        }
+
+        async function fetchPrice() {
+            const response = await fetch('/latest-prices');
+            const prices = await response.json();
+            if (prices[currentPair]) {
+                priceBox.innerText = prices[currentPair];
+            } else {
+                priceBox.innerText = '--';
+            }
+        }
+    </script>
+</body>
+</html>

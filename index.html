@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>منصة التداول الذكية - Pocket Option</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  
+<script src="https://cdn.jsdelivr.net/npm/@msgpack/msgpack.min.js"></script>
+
+<script>
+    let socket;
+    let reconnectInterval = 5000;
+
+    function connectWebSocket() {
+        socket = new WebSocket('wss://api-eu.po.market/socket.io/?EIO=4&transport=websocket');
+        socket.binaryType = 'arraybuffer';
+
+        socket.onopen = function () {
+            console.log('✅ WebSocket Connected');
+            document.getElementById('connectionStatus').innerText = 'Connected';
+        };
+
+        socket.onmessage = function (event) {
+            try {
+                if (typeof event.data === 'string') {
+                    console.log('📩 Text Message:', event.data);
+                } else {
+                    const buffer = new Uint8Array(event.data);
+                    const unpacked = window.msgpack.decode(buffer);
+                    console.log('📊 Binary Message:', unpacked);
+                    // document.getElementById('price_display').innerText = JSON.stringify(unpacked);
+                }
+            } catch (error) {
+                console.error('❌ Error decoding message:', error);
+            }
+        };
+
+        socket.onerror = function (error) {
+            console.error('❗ WebSocket Error:', error);
+        };
+
+        socket.onclose = function () {
+            console.warn('🔌 WebSocket Disconnected. Reconnecting...');
+            document.getElementById('connectionStatus').innerText = 'Disconnected. Reconnecting...';
+            setTimeout(connectWebSocket, reconnectInterval);
+        };
+    }
+
+    window.onload = function () {
+        connectWebSocket();
+    };
+</script>
+
+<div id="connectionStatus" style="font-weight: bold; color: green;">Connecting...</div>
+
+</body>
+</html>
